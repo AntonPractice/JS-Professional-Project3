@@ -1,73 +1,88 @@
-import { 
-  IsNotEmpty, 
-  IsString, 
-  IsEnum, 
-  IsArray, 
-  IsOptional, 
-  ValidateNested,
-  IsNumber 
-} from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TaskDifficulty } from '../entities/task.entity';
 
 class ExampleDto {
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ 
+    example: 'str1 = Открой, str2 = ворота',
+    description: 'Входные данные'
+  })
   @IsString()
   input: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ 
+    example: 'Откройворота',
+    description: 'Выходные данные'
+  })
   @IsString()
   output: string;
 
-  @ApiProperty()
-  @IsOptional()
+  @ApiProperty({ 
+    example: 'Откройворота',
+    description: 'Объяснение решения'
+  })
   @IsString()
-  explanation?: string;
+  explanation: string;
 }
 
 export class CreateTaskDto {
-  @ApiProperty()
+  @ApiProperty({ 
+    example: 'Первое задание',
+    description: 'Название задачи'
+  })
   @IsNotEmpty()
   @IsString()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ 
+    example: 'Конкатенация строк',
+    description: 'Описание задачи'
+  })
   @IsNotEmpty()
   @IsString()
   description: string;
 
-  @ApiProperty({ enum: ['easy', 'medium', 'hard'] })
+  @ApiProperty({ 
+    enum: TaskDifficulty, 
+    example: TaskDifficulty.EASY,
+    description: 'Сложность задачи'
+  })
   @IsNotEmpty()
-  @IsEnum(['easy', 'medium', 'hard'])
-  difficulty: string;
+  @IsEnum(TaskDifficulty)
+  difficulty: TaskDifficulty;
 
-  @ApiProperty()
-  @IsOptional()
+  @ApiProperty({ 
+    example: ['concatenation', 'easy'], 
+    type: [String],
+    description: 'Теги задачи'
+  })
   @IsArray()
   @IsString({ each: true })
-  tags?: string[];
+  tags: string[];
 
-  @ApiProperty({ type: [ExampleDto] })
-  @IsOptional()
+  @ApiProperty({ 
+    type: [ExampleDto],
+    description: 'Примеры ввода/вывода'
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ExampleDto)
-  examples?: ExampleDto[];
+  examples: ExampleDto[];
 
-  @ApiProperty()
+  @ApiProperty({ 
+    example: 'd5d90c66-7eb4-4e67-8888-0aad99cc30fc',
+    description: 'ID автора задачи'
+  })
   @IsNotEmpty()
   @IsString()
   authorId: string;
 
-  @ApiProperty({ enum: ['user', 'admin', 'interviewer'] })
+  @ApiProperty({ 
+    example: 'admin',
+    description: 'Роль автора'
+  })
   @IsNotEmpty()
-  @IsEnum(['user', 'admin', 'interviewer'])
+  @IsString()
   authorRole: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsNumber()
-  rating?: number;
 }
