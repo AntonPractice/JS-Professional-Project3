@@ -1,48 +1,50 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User, UserDocument } from './schemas/user.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
 
-  async findAll(): Promise<Omit<User, 'password'>[]> {
-    const users = await this.userModel.find().exec();
-    return users.map(user => {
-      const { password, ...userWithoutPassword } = user.toObject();
-      return userWithoutPassword;
-    });
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find();
   }
 
-  async findOne(id: string): Promise<Omit<User, 'password'>> {
-    const user = await this.userModel.findById(id).exec();
+  async findOne(id: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const { password, ...userWithoutPassword } = user.toObject();
-    return userWithoutPassword;
+    return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<Omit<User, 'password'>> {
-    const user = await this.userModel
-      .findByIdAndUpdate(id, { ...updateUserDto, updatedAt: new Date() }, { new: true })
-      .exec();
-    
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    
-    const { password, ...userWithoutPassword } = user.toObject();
-    return userWithoutPassword;
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email } });
   }
 
-  async remove(id: string): Promise<void> {
-    const result = await this.userModel.findByIdAndDelete(id).exec();
-    if (!result) {
-      throw new NotFoundException('User not found');
-    }
+  async findByUsername(username: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { username } });
+  }
+
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const user = this.usersRepository.create(createUserDto);
+    return this.usersRepository.save(user);
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.findOne(id);
+    const updatedUser = this.usersRepository.merge(user, updateUserDto);
+    return this.usersRepository.save(updatedUser);
+  }
+
+  async remove(id: string): Promise<User> {
+    const user = await this.findOne(id);
+    return this.usersRepository.remove(user);
   }
 }
