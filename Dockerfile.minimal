@@ -1,0 +1,19 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Устанавливаем cross-env глобально
+RUN npm install -g cross-env
+
+# Копируем package файлы
+COPY package*.json ./
+
+# Устанавливаем все зависимости (включая devDependencies)
+RUN npm config set registry https://registry.npmmirror.com/ && \
+    npm install --legacy-peer-deps
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start:dev"]

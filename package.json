@@ -7,15 +7,19 @@
   "license": "UNLICENSED",
  "scripts": {
     "build": "nest build",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "typeorm": "ts-node ./node_modules/typeorm/cli"
+    "typeorm": "ts-node ./node_modules/typeorm/cli",
+    "start": "cross-env NODE_ENV=development nest start",
+    "start:dev": "cross-env NODE_ENV=development nest start --watch",
+    "start:docker": "docker-compose up --build",
+    "start:docker:windows": "docker-compose -f docker-compose.windows.fixed.yml up --build",
+    "start:prod": "node dist/main",
+    "db:local": "psql -h localhost -p 5432 -U postgres -d postgres",
+    "db:docker": "psql -h localhost -p 5433 -U postgres -d litcode_dev",
+    "stop:docker": "docker-compose down"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

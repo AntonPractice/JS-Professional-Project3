@@ -1,0 +1,43 @@
+FROM node:18-alpine
+
+# Устанавливаем необходимые пакеты
+RUN apk add --no-cache python3 make g++ curl
+
+# НАСТРОЙКА РОССИЙСКИХ ЗЕРКАЛ
+# 1. npm registry (Китайское зеркало - работает в РФ)
+RUN npm config set registry https://registry.npmmirror.com/
+RUN npm config set disturl https://npmmirror.com/dist
+RUN npm config set electron_mirror https://npmmirror.com/mirrors/electron/
+RUN npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/
+RUN npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs/
+
+# 2. Увеличиваем таймауты для медленных сетей
+RUN npm config set fetch-retry-maxtimeout 300000
+RUN npm config set fetch-retry-mintimeout 100000
+RUN npm config set fetch-retries 10
+
+WORKDIR /app
+
+# Копируем package файлы
+COPY package*.json ./
+
+# Устанавливаем сначала основные зависимости
+RUN echo "Установка основных зависимостей..." && \
+    npm install --legacy-peer-deps --no-optional --verbose \
+        @nestjs/core \
+        @nestjs/common \
+        rxjs \
+        reflect-metadata
+
+# Устанавливаем остальные зависимости
+RUN echo "Установка всех зависимостей..." && \
+    npm install --legacy-peer-deps --no-optional --verbose
+
+COPY . .
+
+# Устанавливаем Nest CLI с китайским зеркалом
+RUN npm install -g @nestjs/cli --registry=https://registry.npmmirror.com
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start:dev"]
