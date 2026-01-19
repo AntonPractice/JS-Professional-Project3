@@ -3,55 +3,36 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: litcode-postgres-dev-ru
+    container_name: litcode-postgres
     environment:
       POSTGRES_DB: litcode_dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres123
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data_ru:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 5
     restart: unless-stopped
-    # Российское зеркало для PostgreSQL
-    # image: cr.yandex/mirror/library/postgres:15-alpine
 
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.windows.russia
-    container_name: litcode-backend-dev-ru
+      dockerfile: Dockerfile.prod
+    container_name: litcode-backend
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/litcode_dev
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres123
+      DB_DATABASE: litcode_dev
       PORT: 3000
       JWT_SECRET: dev-secret-key-change-in-production
       SWAGGER_ENABLED: "true"
-    # Российские DNS сервера
-    dns:
-      - 77.88.8.8        # Яндекс DNS
-      - 77.88.8.1        # Яндекс DNS
-      - 8.8.8.8          # Google DNS (резерв)
-    # Добавляем hosts для обхода блокировок
-    extra_hosts:
-      - "registry.npmjs.org:104.16.30.29"
-      - "registry.yarnpkg.com:104.16.30.29"
-      - "npmmirror.com:110.242.68.66"
-    volumes:
-      - .:/app
-      - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
-
-volumes:
-  postgres_data_ru:

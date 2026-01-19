@@ -4,7 +4,11 @@ WORKDIR /app
 
 # Копируем package файлы
 COPY package*.json ./
-RUN npm ci
+COPY nest-cli.json ./
+COPY tsconfig*.json ./
+
+# Устанавливаем зависимости
+RUN npm install --legacy-peer-deps
 
 # Копируем исходный код и собираем
 COPY . .
@@ -17,22 +21,13 @@ WORKDIR /app
 
 # Устанавливаем только production зависимости
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Копируем собранное приложение из builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-
-# Создаем пользователя для безопасности
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001
-
-# Меняем владельца файлов
-RUN chown -R nestjs:nodejs /app
-USER nestjs
 
 # Открываем порт
 EXPOSE 3000
 
-# Запускаем приложение
+# Команда запуска
 CMD ["node", "dist/main.js"]

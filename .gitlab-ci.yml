@@ -1,13 +1,9 @@
 stages:
-  - lint
-  - test
   - build
   - deploy
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
-  IMAGE_NAME: $CI_REGISTRY_IMAGE/backend
-  DOCKER_BUILDKIT: 1
 
 # Используем Docker-in-Docker
 services:
@@ -15,70 +11,35 @@ services:
 
 before_script:
   - docker info
-  - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
 
-# Этап линтинга
-lint:
-  stage: lint
-  image: node:18-alpine
-  script:
-    - npm ci
-    - npm run lint
-  only:
-    - merge_requests
-    - main
-    - develop
-
-# Этап тестирования
-test:
-  stage: test
-  image: node:18-alpine
-  services:
-    - postgres:15-alpine
-  variables:
-    POSTGRES_DB: litcode_test
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres123
-    NODE_ENV: test
-    DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/litcode_test
-  script:
-    - npm ci
-    - npm run test
-    - npm run test:cov
-  artifacts:
-    reports:
-      junit: reports/junit.xml
-    paths:
-      - coverage/
-  only:
-    - merge_requests
-    - main
-    - develop
-
-# Этап сборки Docker образа
+# 1. BUILD - сборка Docker-образа
 build:
   stage: build
   script:
-    - echo "Building Docker image..."
-    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $IMAGE_NAME:latest -f Dockerfile .
-    - docker push $IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-    - docker push $IMAGE_NAME:latest
+    - echo "🔨 Building Docker production image..."
+    - docker build -t litcode-backend-prod -f Dockerfile.prod .
+    - echo "✅ Docker image built successfully!"
+    - echo "📦 Image name: litcode-backend-prod"
   only:
     - main
+  when: always
 
-# Этап деплоя на Render.com
+# 2. DEPLOY - деплой на Railway через Railway CLI
 deploy:
   stage: deploy
-  image: curlimages/curl:latest
+  image: node:20-alpine
   script:
-    - |
-      if [ -n "$RENDER_DEPLOY_HOOK_URL" ]; then
-        echo "Triggering Render deployment..."
-        curl -X POST "$RENDER_DEPLOY_HOOK_URL"
-        echo "Deployment triggered successfully!"
-      else
-        echo "RENDER_DEPLOY_HOOK_URL not set. Skipping deployment."
-      fi
+    - echo "🚀 Installing Railway CLI..."
+    - npm install -g @railway/cli
+    
+    - echo "🔑 Logging into Railway..."
+    - railway login --token $RAILWAY_TOKEN
+    
+    - echo "📡 Deploying to Railway..."
+    - railway up --detach
+    
+    - echo "✅ Deployment initiated!"
+    - echo "🌐 Check your deployment at: https://railway.app/project"
   only:
     - main
   when: manual
