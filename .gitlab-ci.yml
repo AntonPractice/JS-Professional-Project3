@@ -1,0 +1,45 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+
+# Используем Docker-in-Docker
+services:
+  - docker:dind
+
+before_script:
+  - docker info
+
+# 1. BUILD - сборка Docker-образа
+build:
+  stage: build
+  script:
+    - echo "🔨 Building Docker production image..."
+    - docker build -t litcode-backend-prod -f Dockerfile.prod .
+    - echo "✅ Docker image built successfully!"
+    - echo "📦 Image name: litcode-backend-prod"
+  only:
+    - main
+  when: always
+
+# 2. DEPLOY - деплой на Railway через Railway CLI
+deploy:
+  stage: deploy
+  image: node:20-alpine
+  script:
+    - echo "🚀 Installing Railway CLI..."
+    - npm install -g @railway/cli
+    
+    - echo "🔑 Logging into Railway..."
+    - railway login --token $RAILWAY_TOKEN
+    
+    - echo "📡 Deploying to Railway..."
+    - railway up --detach
+    
+    - echo "✅ Deployment initiated!"
+    - echo "🌐 Check your deployment at: https://railway.app/project"
+  only:
+    - main
+  when: manual

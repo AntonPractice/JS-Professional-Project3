@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: litcode-backend
+    runtime: docker
+    repo: https://github.com/AntonPractice/JS-Professional-Project3.git
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SWAGGER_ENABLED
+        value: "false"
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+databases:
+  - name: litcode-db
+    databaseName: litcode_prod
+    user: litcode_user
+    plan: free
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
