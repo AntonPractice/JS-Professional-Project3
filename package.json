@@ -12,7 +12,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "typeorm": "ts-node ./node_modules/typeorm/cli",
-    "start": "cross-env NODE_ENV=development nest start",
+    "start": "node dist/main.js",
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
     "start:docker": "docker-compose up --build",
     "start:docker:windows": "docker-compose -f docker-compose.windows.fixed.yml up --build",
