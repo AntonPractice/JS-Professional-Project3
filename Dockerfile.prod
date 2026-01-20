@@ -1,14 +1,20 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine
+
 WORKDIR /app
+
+# Копируем package.json и package-lock.json
 COPY package*.json ./
-RUN npm install
+
+# Устанавливаем все зависимости (включая dev для сборки)
+RUN npm install --legacy-peer-deps
+
+# Копируем остальной код
 COPY . .
+
+# Собираем проект
 RUN npm run build
 
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --only=production
-COPY --from=builder /app/dist ./dist
+# Production этап (опционально можно сделать multi-stage build)
 EXPOSE 3000
+
 CMD ["node", "dist/main.js"]
