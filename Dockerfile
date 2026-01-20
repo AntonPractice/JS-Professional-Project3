@@ -2,32 +2,33 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Устанавливаем зависимости для сборки
+# 1. Копируем только package.json
 COPY package*.json ./
-COPY prisma ./prisma
-RUN npm ci --legacy-peer-deps
-RUN npx prisma generate
 
-# Копируем и собираем
+# 2. Устанавливаем ВСЕ зависимости (включая dev)
+RUN npm ci --legacy-peer-deps
+
+# 3. Копируем остальные файлы
 COPY . .
+
+# 4. Собираем приложение
 RUN npm run build
 
-# Production образ
+# 5. Production образ
 FROM node:20-alpine
 WORKDIR /app
 
-# Устанавливаем production зависимости
+# 6. Копируем package.json
 COPY package*.json ./
-COPY prisma ./prisma
+
+# 7. Устанавливаем только production зависимости
 RUN npm ci --only=production --legacy-peer-deps
-RUN npx prisma generate
 
-# Копируем собранное приложение
+# 8. Копируем собранное приложение
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Открываем порт
+# 9. Открываем порт
 EXPOSE 3000
 
-# Команда запуска
+# 10. Команда запуска
 CMD ["node", "dist/main.js"]
