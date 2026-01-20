@@ -1,34 +1,26 @@
 # Dockerfile
-FROM node:20-alpine AS builder
+FROM node:20-alpine
+
 WORKDIR /app
 
-# 1. Копируем только package.json
+# 1. Копируем package.json и package-lock.json
 COPY package*.json ./
 
-# 2. Устанавливаем ВСЕ зависимости (включая dev)
-RUN npm ci --legacy-peer-deps
+# 2. Устанавливаем зависимости
+RUN npm install --legacy-peer-deps
 
-# 3. Копируем остальные файлы
+# 3. Копируем остальной код
 COPY . .
 
-# 4. Собираем приложение
+# 4. Собираем проект
 RUN npm run build
 
-# 5. Production образ
-FROM node:20-alpine
-WORKDIR /app
+# 5. Устанавливаем переменные окружения
+ENV NODE_ENV=production
+ENV PORT=3000
 
-# 6. Копируем package.json
-COPY package*.json ./
-
-# 7. Устанавливаем только production зависимости
-RUN npm ci --only=production --legacy-peer-deps
-
-# 8. Копируем собранное приложение
-COPY --from=builder /app/dist ./dist
-
-# 9. Открываем порт
+# 6. Открываем порт
 EXPOSE 3000
 
-# 10. Команда запуска
+# 7. Запускаем приложение
 CMD ["node", "dist/main.js"]
