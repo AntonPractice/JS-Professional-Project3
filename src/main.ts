@@ -1,43 +1,20 @@
-import { NestFactory, Reflector } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-  }));
-
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-
+  
+  // Настройка Swagger
   const config = new DocumentBuilder()
-    .setTitle('LeetCode Clone API')
-    .setDescription('API для клона LeetCode - платформы для подготовки к техническим собеседованиям')
+    .setTitle('LitCode API')
+    .setDescription('The LitCode API description')
     .setVersion('1.0')
-    .addBearerAuth({
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      description: 'Введите JWT токен'
-    })
+    .addTag('litcode')
     .build();
-
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-      tryItOutEnabled: true,
-      displayRequestDuration: true,
-      docExpansion: 'list',
-      filter: true,
-    },
-    customSiteTitle: 'LeetCode Clone API Документация',
-  });
-
-  await app.listen(3000);
-  console.log('Документация API: http://localhost:3000/api-docs');
+  SwaggerModule.setup('api-docs', app, document);
+  
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
