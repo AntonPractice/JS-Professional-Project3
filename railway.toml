@@ -1,0 +1,11 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "node dist/main.js"
+healthCheckPath = "/api/health"
+
+# Автоматически создаст PostgreSQL
+[service]
+type = "web"
