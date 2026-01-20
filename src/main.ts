@@ -5,20 +5,24 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // НАСТРОЙКА CORS ДЛЯ RAILWAY
-  app.enableCors();
+  // Настройка CORS
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
   
-  // СОЗДАНИЕ ПРОСТОГО HEALTH CHECK ENDPOINT
+  // Health check endpoint (Railway будет проверять этот путь)
   app.getHttpAdapter().get('/api/health', (req, res) => {
     res.json({ 
       status: 'OK',
       service: 'litcode-backend',
       timestamp: new Date().toISOString(),
-      database: 'not connected (temporary)'
+      environment: process.env.NODE_ENV || 'development',
+      database: process.env.DATABASE_URL ? 'configured' : 'not configured'
     });
   });
   
-  // НАСТРОЙКА SWAGGER
+  // Swagger документация
   const config = new DocumentBuilder()
     .setTitle('LitCode API')
     .setDescription('API для платформы LitCode')
@@ -28,10 +32,14 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
   
-  // ПОРТ ИЗ ПЕРЕМЕННОЙ ОКРУЖЕНИЯ ИЛИ 3000
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`🚀 Приложение запущено на http://localhost:${port}`);
-  console.log(`📚 Swagger доступен на http://localhost:${port}/api-docs`);
+  console.log(`🚀 Приложение запущено на порту ${port}`);
+  console.log(`📚 Swagger: http://localhost:${port}/api-docs`);
+  console.log(`❤️  Health check: http://localhost:${port}/api/health`);
+  
+  if (process.env.DATABASE_URL) {
+    console.log(`🗄️  Database URL: ${process.env.DATABASE_URL.substring(0, 30)}...`);
+  }
 }
 bootstrap();

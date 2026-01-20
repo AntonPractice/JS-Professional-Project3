@@ -1,8 +1,16 @@
-# railway.toml
 [build]
 builder = "NIXPACKS"
 
 [deploy]
 startCommand = "node dist/main.js"
 healthCheckPath = "/api/health"
-healthCheckTimeout = 120
+healthCheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+[variables]
+NODE_ENV = "production"
+PORT = "3000"
+SWAGGER_ENABLED = "true"
+# ПРИМЕЧАНИЕ: Railway автоматически добавит DATABASE_URL
+# Не добавляйте его здесь вручную!
