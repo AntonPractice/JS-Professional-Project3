@@ -1,11 +1,8 @@
+# railway.toml
 [build]
 builder = "NIXPACKS"
 
 [deploy]
 startCommand = "node dist/main.js"
 healthCheckPath = "/api/health"
-healthCheckTimeout = 100
-
-[variables]
-NODE_ENV = "production"
-PORT = "3000"
+healthCheckTimeout = 120
