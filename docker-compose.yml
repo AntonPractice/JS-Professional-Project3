@@ -5,37 +5,28 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: ${DB_NAME:-litcode}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
+      POSTGRES_DB: litcode
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      # Railway автоматически добавит эти переменные
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres123}@postgres:5432/${DB_NAME:-litcode}
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/litcode
+      JWT_SECRET: your-secret-key-here
       SWAGGER_ENABLED: "true"
     depends_on:
-      postgres:
-        condition: service_healthy
-    # Явно указываем команду
-    command: node dist/main.js
+      - postgres
 
 volumes:
   postgres_data:
